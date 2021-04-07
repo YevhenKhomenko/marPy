@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+    'apps_generic.whodidit',
     'accounts.apps.AccountsConfig',
     'recommendations.apps.RecommendationsConfig',
 ]
@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps_generic.whodidit.middleware.RequestMiddleware'
 ]
 
 ROOT_URLCONF = 'motorroutes.urls'
