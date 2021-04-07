@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from apps_generic.whodidit.models import WhoDidIt
 
-class UserProfile(models.Model):
+
+class UserProfile(WhoDidIt):
     """ Default user profile class """
 
     GENDERS = (
