@@ -5,27 +5,26 @@ from apps_generic.whodidit.models import WhoDidIt
 
 
 class UserProfile(WhoDidIt):
-    """ Default user profile class """
+    class Gender:
+        male = 'm'
+        female = 'f'
 
     GENDERS = (
-        ('m', 'Male'),
-        ('f', 'Female')
+        (Gender.male, 'Male'),
+        (Gender.female, 'Female')
     )
+
     user = models.OneToOneField(
         User,
         verbose_name='User',
         on_delete=models.CASCADE,
     )
 
-    user_date_of_birth = models.DateField(default=None, verbose_name="Date Of Birth")
-    user_gender = models.CharField(default=None, verbose_name='Gender', max_length=1, choices=GENDERS)
-    user_phone_number = models.CharField(verbose_name='Phone Number', max_length=13)
-    profile_bio = models.CharField(verbose_name='Profile Description', max_length=250)
-
-    # TODO:from gallery app import model
-    # profile_photo = models.ForeignKey(ProfilePhoto, on_delete=models.CASCADE)
-    # OR
-    # profile_photo = models.ImageField()
+    date_of_birth = models.DateField(verbose_name="Date Of Birth", default=None)
+    phone_number = models.CharField(verbose_name='Phone Number', max_length=13)
+    photo = models.ImageField(verbose_name='Profile Photo', upload_to=None, blank=True)
+    bio = models.CharField(verbose_name='Profile Description', max_length=250, blank=True)
+    gender = models.CharField(verbose_name='Gender', max_length=1, choices=GENDERS, blank=True)
 
     class Meta:
         verbose_name = 'User Profile'
