@@ -3,9 +3,7 @@
 import os
 import sys
 
-
-#TODO: add FK
-#FIXME: removw this row
+#change in dev
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'motorroutes.settings')
     try:
