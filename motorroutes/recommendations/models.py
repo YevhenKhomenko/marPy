@@ -17,8 +17,8 @@ class Place(models.Model):
 
 
 class Similarity(models.Model):
-    first_place = models.ForeignKey(Place, related_name='first_place', on_delete=models.CASCADE)
-    second_place = models.ForeignKey(Place, related_name='second_place', on_delete=models.CASCADE)
+    first_place = models.OneToOneField(Place, related_name='first_place', on_delete=models.CASCADE)
+    second_place = models.OneToOneField(Place, related_name='second_place', on_delete=models.CASCADE)
     similarity_score = models.DecimalField(max_digits=7, decimal_places=3)
 
     def __str__(self):
