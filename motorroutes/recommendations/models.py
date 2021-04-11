@@ -11,6 +11,7 @@ class Place(models.Model):
     num_rated = models.IntegerField(null=True, blank=True)
     comparable = models.BooleanField(default=True)
     liked = models.BooleanField(null=True, blank=True)
+    #TODO add ForeignKey to Navigation
 
     def __str__(self):
         return self.title
