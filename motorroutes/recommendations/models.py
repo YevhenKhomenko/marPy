@@ -11,14 +11,15 @@ class Place(models.Model):
     num_rated = models.IntegerField(null=True, blank=True)
     comparable = models.BooleanField(default=True)
     liked = models.BooleanField(null=True, blank=True)
+    #TODO add ForeignKey to Navigation
 
     def __str__(self):
         return self.title
 
 
 class Similarity(models.Model):
-    first_place = models.ForeignKey(Place, related_name='first_place', on_delete=models.CASCADE)
-    second_place = models.ForeignKey(Place, related_name='second_place', on_delete=models.CASCADE)
+    first_place = models.OneToOneField(Place, related_name='first_place', on_delete=models.CASCADE)
+    second_place = models.OneToOneField(Place, related_name='second_place', on_delete=models.CASCADE)
     similarity_score = models.DecimalField(max_digits=7, decimal_places=3)
 
     def __str__(self):
