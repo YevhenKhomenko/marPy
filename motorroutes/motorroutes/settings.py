@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'apps_generic.whodidit',
     'accounts.apps.AccountsConfig',
     'recommendations.apps.RecommendationsConfig',
+    'products.apps.ProductsConfig'
 ]
 
 MIDDLEWARE = [
