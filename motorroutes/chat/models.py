@@ -6,10 +6,10 @@ from django.utils.translation import ugettext_lazy as _
 
 class Chat(models.Model):
     DIALOG = 'D'
-    CHAT = 'C'
+    GROUP = 'G'
     CHAT_TYPE_CHOICES = (
         (DIALOG, _('Dialog')),
-        (CHAT, _('Chat'))
+        (GROUP, _('Group'))
     )
 
     type = models.CharField(
@@ -31,6 +31,7 @@ class Message(models.Model):
     message = models.TextField(_("Message"))
     pub_date = models.DateTimeField(_('Public Date'), default=timezone.now)
     is_readed = models.BooleanField(_('Is Readed'), default=False)
+    soft_delete = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['pub_date']
