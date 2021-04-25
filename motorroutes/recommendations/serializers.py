@@ -12,7 +12,7 @@ class UserNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id','date_of_birth', 'phone_number', 'gender', 'bio']
+        fields = ['id', 'date_of_birth', 'phone_number', 'gender', 'bio']
 
 
 class PlaceNestedSerializer(serializers.ModelSerializer):
@@ -73,6 +73,7 @@ class SimilarityDetailsSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class OnlineLinkListSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnlineLink
@@ -85,7 +86,7 @@ class OnlineLinkDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OnlineLink
-        fields = ['id', 'place', 'user_id', 'gallery_id','blog_id','google_id']
+        fields = ['id', 'place', 'user_id', 'gallery_id', 'blog_id', 'google_id']
 
     def update(self, instance, validated_data):
         place_data = validated_data.pop('place')
