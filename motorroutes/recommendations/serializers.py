@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from .models import Place, Similarity, OnlineLink
-from accounts.models import User
+from accounts.models import UserProfile
 
 
-class UserNestedSerializer(serializers.ModelSerializer):
+class UserProfileNestedSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
     date_of_birth = serializers.DateField(read_only=True)
     phone_number = serializers.CharField(read_only=True)
@@ -11,7 +11,7 @@ class UserNestedSerializer(serializers.ModelSerializer):
     gender = serializers.CharField(read_only=True)
 
     class Meta:
-        model = User
+        model = UserProfile
         fields = ['id', 'date_of_birth', 'phone_number', 'gender', 'bio']
 
 
@@ -21,7 +21,7 @@ class PlaceNestedSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
 
     class Meta:
-        model = User
+        model = UserProfile
         fields = ['id', 'title', 'description']
 
 
@@ -32,7 +32,7 @@ class PlaceListSerializer(serializers.ModelSerializer):
 
 
 class PlaceDetailsSerializer(serializers.ModelSerializer):
-    user_id = UserNestedSerializer()
+    user_id = UserProfileNestedSerializer()
 
     class Meta:
         model = Place
@@ -42,7 +42,7 @@ class PlaceDetailsSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         user_id_data = validated_data.pop('user_id')
         instance = super().update(instance, validated_data)
-        user_id = User.objects.get(pk=user_id_data.get('user_id'))
+        user_id = UserProfile.objects.get(pk=user_id_data.get('user_id'))
         instance.user_id = user_id
         instance.save()
         return instance
@@ -66,8 +66,8 @@ class SimilarityDetailsSerializer(serializers.ModelSerializer):
         first_place_data = validated_data.pop('first_place')
         second_place_data = validated_data.pop('second_place')
         instance = super().update(instance, validated_data)
-        first_place = User.objects.get(pk=first_place_data.get('id'))
-        second_place = User.objects.get(pk=second_place_data.get('id'))
+        first_place = Place.objects.get(pk=first_place_data.get('id'))
+        second_place = Place.objects.get(pk=second_place_data.get('id'))
         instance.first_place = first_place
         instance.second_place = second_place
         instance.save()
@@ -82,7 +82,7 @@ class OnlineLinkListSerializer(serializers.ModelSerializer):
 
 class OnlineLinkDetailsSerializer(serializers.ModelSerializer):
     place = PlaceNestedSerializer()
-    user_id = UserNestedSerializer()
+    user_id = UserProfileNestedSerializer()
 
     class Meta:
         model = OnlineLink
@@ -92,8 +92,8 @@ class OnlineLinkDetailsSerializer(serializers.ModelSerializer):
         place_data = validated_data.pop('place')
         user_id_data = validated_data.pop('user_id')
         instance = super().update(instance, validated_data)
-        place = User.objects.get(pk=place_data.get('id'))
-        user_id = User.objects.get(pk=user_id_data.get('id'))
+        place = UserProfile.objects.get(pk=place_data.get('id'))
+        user_id = UserProfile.objects.get(pk=user_id_data.get('id'))
         instance.place = place
         instance.user_id = user_id
         instance.save()
