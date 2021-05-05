@@ -1,15 +1,16 @@
-from django.http import HttpResponse
-
 from .models import Place, Similarity, OnlineLink
 from .serializers import PlaceListSerializer, PlaceDetailsSerializer, SimilarityListSerializer, \
     SimilarityDetailsSerializer, OnlineLinkDetailsSerializer, OnlineLinkListSerializer
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, pagination
+from .filters import PlaceFilter
 
 
 class PlaceList(generics.ListCreateAPIView):
     queryset = Place.objects.all()
     serializer_class = PlaceListSerializer
+    pagination_class = pagination.LimitOffsetPagination
+    filter_class = PlaceFilter
 
 
 class PlaceDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -22,6 +23,7 @@ class PlaceDetails(generics.RetrieveUpdateDestroyAPIView):
 class SimilarityList(generics.ListCreateAPIView):
     queryset = Similarity.objects.all()
     serializer_class = SimilarityListSerializer
+    pagination_class = pagination.LimitOffsetPagination
 
 
 class SimilarityDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -34,6 +36,7 @@ class SimilarityDetails(generics.RetrieveUpdateDestroyAPIView):
 class OnlineLinkList(generics.ListCreateAPIView):
     queryset = OnlineLink.objects.all()
     serializer_class = OnlineLinkListSerializer
+    pagination_class = pagination.LimitOffsetPagination
 
 
 class OnlineLinkDetails(generics.RetrieveUpdateDestroyAPIView):
