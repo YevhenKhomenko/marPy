@@ -9,7 +9,7 @@ class UserProfileList(generics.ListCreateAPIView):
     serializer_class = UserProfileListSerializer
 
 
-class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
+class UserProfileDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserProfileDetailsSerializer
 
     def get_object(self):
