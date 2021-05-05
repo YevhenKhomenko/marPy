@@ -14,11 +14,10 @@ class ProductList(generics.ListCreateAPIView):
     
     def get_queryset(self):
         return Product.objects.all()
-    
-    
+
+
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductDetailsSerializer
     
     def get_object(self):
         return get_object_or_404(Product, pk=self.kwargs.get('product_id'))
-
