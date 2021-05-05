@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'apps_generic.whodidit',
     'accounts.apps.AccountsConfig',
     'recommendations.apps.RecommendationsConfig',
-    'products.apps.ProductsConfig'
+    'products.apps.ProductsConfig',
+    'navigation.apps.NavigationConfig',
+    'blog.apps.BlogConfig'
 ]
 
 MIDDLEWARE = [
