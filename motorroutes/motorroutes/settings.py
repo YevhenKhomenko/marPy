@@ -86,9 +86,9 @@ DATABASES = {
     'default': { 
         'ENGINE': 'django.db.backends.postgresql_psycopg2', 
         'NAME': 'motorroutes', 
-        'USER': 'Diana',
-        'PASSWORD': 't347009003t',
-        'HOST': 'localhost',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
         'PORT': 5432,
     }
 }
