@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'apps_generic.whodidit',
     'accounts.apps.AccountsConfig',
     'recommendations.apps.RecommendationsConfig',
-    'products.apps.ProductsConfig'
+    'products.apps.ProductsConfig',
+    'navigation.apps.NavigationConfig'
 ]
 
 MIDDLEWARE = [
@@ -83,12 +84,8 @@ WSGI_APPLICATION = 'motorroutes.wsgi.application'
 
 DATABASES = { 
     'default': { 
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', 
-        'NAME': '', 
-        'USER': '', 
-        'PASSWORD': '', 
-        'HOST': '', 
-        'PORT': 1234, 
+        'ENGINE': 'django.db.backends.sqlite3', 
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'), 
     }
 }
 
