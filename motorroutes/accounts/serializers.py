@@ -31,6 +31,7 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ['id', 'phone_number', 'photo', 'user', 'created_by', 'bio', 'gender']
 
+
 class ValidationMixIn():
     def validate_userprofile(self, data):
         u_count = UserProfile.objects.filter(id=data.get('id')).count()
@@ -38,6 +39,7 @@ class ValidationMixIn():
             return data
         else:
             raise serializers.ValidationError("wrong UserProfile id")
+
 
 class UserProfileNestedSerializer(serializers.ModelSerializer,ValidationMixIn):
     id = serializers.IntegerField()
