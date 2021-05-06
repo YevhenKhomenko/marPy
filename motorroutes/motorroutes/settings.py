@@ -85,11 +85,11 @@ WSGI_APPLICATION = 'motorroutes.wsgi.application'
 DATABASES = { 
     'default': { 
         'ENGINE': 'django.db.backends.postgresql_psycopg2', 
-        'NAME': 'motorroutes', 
+        'NAME': '', 
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
-        'PORT': 5432,
+        'PORT': 1234,
     }
 }
 

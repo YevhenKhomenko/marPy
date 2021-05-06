@@ -25,7 +25,7 @@ class Points(models.Model):
 
 
 class Routes(models.Model):
-	route_with_points = models.ManyToManyField(Points)
+	points = models.ManyToManyField(Points)
 	distance = models.FloatField(blank=True, null=True)
 	shared_with = models.ManyToManyField(User)
 	
