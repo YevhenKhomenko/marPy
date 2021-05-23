@@ -39,7 +39,7 @@ class Product(WhoDidIt):
     
     name = models.CharField(verbose_name="Name", max_length=200)
     description = models.TextField(verbose_name='Description', max_length=5000)
-    vendor_code = models.IntegerField(verbose_name="Vendor Code")
+    vendor_code = models.IntegerField(verbose_name="Vendor Code", null=True, blank=True)
     #vendor_code_old = models.CharField(verbose_name="Vendor Code OLD", max_length=200)
     manufacturer = models.ForeignKey(Manufacturer, verbose_name="Name", on_delete=models.SET_NULL, null=True, blank=True)
     objects = SoftDeletionManager()
