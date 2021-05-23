@@ -1,6 +1,6 @@
 from django.db import models
 from accounts.models import UserProfile
-
+from django.contrib.auth.models import User
 
 
 class Location(models.Model):
@@ -20,12 +20,8 @@ class Points(models.Model):
 	gallery_id = models.IntegerField(blank=True, null=True)
 	blog_id = models.IntegerField(blank=True, null=True)
 	google_id = models.CharField(max_length=500)
-	
-	def __str__(self):
-		return self.name
 
-    def __str__(self):
-        return str(self.name)
+
 
 class Routes(models.Model):
 	points = models.ManyToManyField(Points)
