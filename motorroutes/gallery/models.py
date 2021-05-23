@@ -3,8 +3,9 @@ from django.db import models
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFit
 import uuid
+from apps_generic.whodidit.models import WhoDidIt
 
-class Album(models.Model):
+class Album(WhoDidIt):
     title = models.CharField(max_length=70)
     description = models.TextField(max_length=1024)
     thumb = ProcessedImageField(upload_to='albums', processors=[ResizeToFit(300)], format='JPEG', options={'quality': 90})
@@ -16,7 +17,7 @@ class Album(models.Model):
     def __unicode__(self):
         return self.title
 
-class AlbumImage(models.Model):
+class AlbumImage(WhoDidIt):
     image = ProcessedImageField(upload_to='albums', processors=[ResizeToFit(1280)], format='JPEG', options={'quality': 70})
     thumb = ProcessedImageField(upload_to='albums', processors=[ResizeToFit(300)], format='JPEG', options={'quality': 80})
     album = models.ForeignKey('album', on_delete=models.PROTECT)

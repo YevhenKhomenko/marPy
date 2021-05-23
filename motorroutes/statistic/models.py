@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from apps_generic.whodidit.models import WhoDidIt
 
-# Create your models here.
-class Statistic(models.Model):
+class Statistic(WhoDidIt):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(db_index=True)
     content_object = GenericForeignKey('content_type', 'object_id')

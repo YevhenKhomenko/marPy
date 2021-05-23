@@ -1,6 +1,7 @@
 from django.db import models
+from apps_generic.whodidit.models import WhoDidIt
 
-class Transaction(models.Model):
+class Transaction(WhoDidIt):
     # Transaction id sent by merchant.
     transaction_id = models.CharField(max_length=100)
     # Payment gateway type used in transaction
@@ -25,7 +26,7 @@ class Transaction(models.Model):
         app_label = 'payments'
 
 
-class CancelRefundRequests(models.Model):
+class CancelRefundRequests(WhoDidIt):
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
     # Request ID for a request in a Transaction.
     request_id = models.CharField(max_length=100)
