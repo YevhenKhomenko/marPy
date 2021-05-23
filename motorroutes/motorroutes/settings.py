@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
 
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'imagekit',
     'django.contrib.admin',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'statistic.apps.StatisticConfig',
     'payments.apps.PaymentsConfig',
     'gallery.apps.GalleryConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -141,8 +143,9 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True
 }
 
 from .local_settings import *
