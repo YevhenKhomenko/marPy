@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
 
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'recommendations.apps.RecommendationsConfig',
     'products.apps.ProductsConfig',
     'navigation.apps.NavigationConfig',
+
 ]
 
 MIDDLEWARE = [
@@ -146,8 +148,9 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True
 }
 
 from .local_settings import *
