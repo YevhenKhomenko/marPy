@@ -59,7 +59,6 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
 
 
 class TokenObtainPairCustomSerializer(TokenObtainPairSerializer):
-
     @classmethod
     def get_token(cls, user):
         token = super(TokenObtainPairCustomSerializer, cls).get_token(user)
