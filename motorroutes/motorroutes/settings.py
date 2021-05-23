@@ -16,7 +16,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -28,13 +27,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
 
     'rest_framework',
     'django_filters',
+    'imagekit',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,6 +45,9 @@ INSTALLED_APPS = [
     'recommendations.apps.RecommendationsConfig',
     'products.apps.ProductsConfig',
     'navigation.apps.NavigationConfig',
+    'statistic.apps.StatisticConfig',
+    'payments.apps.PaymentsConfig',
+    'gallery.apps.GalleryConfig',
 ]
 
 MIDDLEWARE = [
@@ -79,22 +81,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'motorroutes.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = { 
-    'default': { 
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', 
-        'NAME': '', 
-        'USER': '', 
-        'PASSWORD': '', 
-        'HOST': '', 
-        'PORT': 1234, 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': 1234,
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -114,7 +113,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
@@ -128,12 +126,10 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
@@ -144,11 +140,9 @@ REST_FRAMEWORK = {
     ),
 }
 
-
 SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
 }
 
 from .local_settings import *
-
