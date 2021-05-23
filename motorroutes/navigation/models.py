@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+from accounts.models import UserProfile
+
 
 
 class Location(models.Model):
@@ -23,6 +24,8 @@ class Points(models.Model):
 	def __str__(self):
 		return self.name
 
+    def __str__(self):
+        return str(self.name)
 
 class Routes(models.Model):
 	points = models.ManyToManyField(Points)
@@ -31,7 +34,3 @@ class Routes(models.Model):
 	
 	def __str__(self):
 		return self.shared_with
-	
-	
-
- 
