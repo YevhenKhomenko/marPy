@@ -7,14 +7,14 @@ from navigation.models import Location
 
 # Create your models here.
 class Place(WhoDidIt):
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE,null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
     user_ratings = models.FloatField(null=True, blank=True)
     num_rated = models.IntegerField(null=True, blank=True)
     comparable = models.BooleanField(default=True)
     liked = models.BooleanField(null=True, blank=True)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE,null=True, blank=True)
 
     def __str__(self):
         return str(self.title)

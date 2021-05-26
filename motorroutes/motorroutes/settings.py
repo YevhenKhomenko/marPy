@@ -148,4 +148,6 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 from .local_settings import *
