@@ -4,14 +4,15 @@ from .serializers import PlaceListSerializer, PlaceDetailsSerializer, Similarity
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, pagination
 from .filters import PlaceFilter
-
+from .permissions import IsOwnerOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 
 class PlaceList(generics.ListCreateAPIView):
     queryset = Place.objects.all()
     serializer_class = PlaceListSerializer
     pagination_class = pagination.LimitOffsetPagination
     filter_class = PlaceFilter
-
+    permission_classes = [IsAuthenticated]
 
 class PlaceDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PlaceDetailsSerializer

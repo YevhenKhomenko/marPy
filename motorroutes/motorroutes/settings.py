@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+     #for command manage.py reset_db
+    'django_extensions',
     'apps_generic.whodidit',
     'accounts.apps.AccountsConfig',
     'recommendations.apps.RecommendationsConfig',
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     'statistic.apps.StatisticConfig',
     'payments.apps.PaymentsConfig',
     'gallery.apps.GalleryConfig',
+
 
 ]
 
@@ -147,7 +150,5 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }
-
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 from .local_settings import *
