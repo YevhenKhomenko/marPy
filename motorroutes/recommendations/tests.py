@@ -13,11 +13,15 @@ class RecommendationsAPITest(TestCase):
         self.admin = create_user('admin@staff')
 
     def test_empty_get(self):
+        login_user(self.c, self.admin)
+        self.c.login()
         response = self.c.get('/api/recommendations/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
     def test_create_validation(self):
+        login_user(self.c, self.admin)
+        self.c.login()
         response = self.c.post('/api/recommendations/',
                                data={
                                    "title": "",
