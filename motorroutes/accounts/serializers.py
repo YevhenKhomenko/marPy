@@ -1,15 +1,17 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.conf import settings
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import UserProfile
-
-
-# TODO: UserRegisterSerializer
+from .models import UserProfile, UserAuthCredentials
+from .socials import Google
+from .social_auth import authenticate_social_user
 
 
 class ValidationMixIn():
@@ -58,16 +60,6 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
         fields = ['id', 'phone_number', 'photo', 'user', 'created_by', 'bio', 'gender']
 
 
-class TokenObtainPairCustomSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super(TokenObtainPairCustomSerializer, cls).get_token(user)
-
-        # Adding custom claims
-        token['username'] = user.username
-        return token
-
-
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
@@ -79,8 +71,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        fields = ['username', 'password', 'password2', 'email', 'first_name', 'last_name']
         extra_kwargs = {
+            'username': {'required': True},
             'first_name': {'required': True},
             'last_name': {'required': True}
         }
@@ -88,7 +81,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
-
         return attrs
 
     def create(self, validated_data):
@@ -102,6 +94,100 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
 
+        user_auth_info = UserAuthCredentials.objects.create(
+            user=user,
+            is_verified=False,
+        )
+        user_auth_info.save()
+
         return user
 
 
+class EmailVerificationSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(max_length=555)
+
+    class Meta:
+        model = User
+        fields = ['token']
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255, min_length=3)
+    password = serializers.CharField(
+        max_length=68, min_length=6, write_only=True)
+    username = serializers.CharField(
+        max_length=255, min_length=3, read_only=True)
+
+    tokens = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['email', 'password', 'username', 'tokens']
+
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        password = attrs.get('password', '')
+        filtered_user_by_email = User.objects.get(email=email)
+        username = filtered_user_by_email.username
+        user = authenticate(username=username, password=password)
+        user_auth_info = UserAuthCredentials.objects.get(user=filtered_user_by_email)
+
+        if filtered_user_by_email and user_auth_info.auth_provider != 'email':
+            raise AuthenticationFailed(
+                detail='Please continue your login using ' + user_auth_info.auth_provider)
+
+        if not user:
+            raise AuthenticationFailed('Invalid credentials, try again')
+        if not user.is_active:
+            raise AuthenticationFailed('Account disabled, contact admin')
+        if not user_auth_info.is_verified:
+            raise AuthenticationFailed('Email is not verified')
+
+        return{
+            'email': user.email,
+            'username': user.username,
+            'tokens': user_auth_info.get_tokens_for_user()
+        }
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    default_error_messages = {
+        'bad_token': 'Token is expired or invalid'
+    }
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+
+        except TokenError:
+            self.fail('bad_token')
+
+
+class GoogleSocialAuthSerializer(serializers.Serializer):
+    auth_token = serializers.CharField()
+
+    def validate(self, auth_token):
+        user_data = Google.validate(auth_token)
+        try:
+            user_data['sub']
+        except Exception as e:
+            raise serializers.ValidationError(
+                'The token is invalid or expired. Please login again.'
+            )
+
+        if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
+            raise AuthenticationFailed('auth failed')
+
+        user_id = user_data['sub']
+        email = user_data['email']
+        name = user_data['name']
+        provider = 'google'
+
+        return authenticate_social_user(
+            provider=provider, user_id=user_id, email=email, name=name)
