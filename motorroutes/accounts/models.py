@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps_generic.whodidit.models import WhoDidIt
 
@@ -31,14 +32,31 @@ class UserProfile(WhoDidIt):
         verbose_name_plural = 'User Profiles'
 
     def __str__(self):
-        return 'Profile for {}'.format(self.user)
+        return 'Profile for {}'.format(self.user.email)
 
 
-class SocialTokens(models.Model):
-    # TODO: implement
-    pass
+AUTH_PROVIDERS = {'google': 'google', 'email': 'email'}
 
 
-class RegistrationTry(models.Model):
-    # TODO: implement
-    pass
+class UserAuthCredentials(models.Model):
+    user = models.OneToOneField(
+        User,
+        verbose_name='User',
+        on_delete=models.CASCADE,
+    )
+    auth_provider = models.CharField(
+        max_length=255, blank=False,
+        null=False, default=AUTH_PROVIDERS.get('email'))
+
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return 'Auth credentials for {}'.format(self.user.email)
+
+    def get_tokens_for_user(self):
+        refresh = RefreshToken.for_user(self.user)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
+
