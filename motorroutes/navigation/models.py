@@ -1,10 +1,9 @@
 from django.db import models
 from accounts.models import UserProfile
-from django.contrib.auth.models import User
 
 
 class Location(models.Model):
-	user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+	user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 	lat = models.FloatField(('Latitude'), blank=True, null=True)
 	lon = models.FloatField(('Longitude'),blank=True, null=True)
 	
@@ -26,7 +25,7 @@ class Points(models.Model):
 class Routes(models.Model):
 	points = models.ManyToManyField(Points)
 	distance = models.FloatField(blank=True, null=True)
-	shared_with = models.ManyToManyField(User)
+	shared_with = models.ManyToManyField(UserProfile)
 	
 	def __str__(self):
 		return self.shared_with

@@ -57,7 +57,7 @@ class PlaceDetailsSerializer(serializers.ModelSerializer, ValidationMixIn):
     def update(self, instance, validated_data):
         userprofile_data = validated_data.pop('userprofile')
         instance = super().update(instance, validated_data)
-        userprofile = get_object_or_404(UserProfile.objects.get(pk=userprofile_data.get('userprofile')))
+        userprofile = get_object_or_404(UserProfile, id=userprofile_data.get('id'))
         instance.userprofile = userprofile
         instance.save()
         return instance
@@ -81,8 +81,8 @@ class SimilarityDetailsSerializer(serializers.ModelSerializer, ValidationMixIn):
         first_place_data = validated_data.pop('first_place')
         second_place_data = validated_data.pop('second_place')
         instance = super().update(instance, validated_data)
-        first_place = get_object_or_404(Place.objects.get(pk=first_place_data.get('id')))
-        second_place = get_object_or_404(Place.objects.get(pk=second_place_data.get('id')))
+        first_place = get_object_or_404(Place, id=first_place_data.get('id'))
+        second_place = get_object_or_404(Place, id=second_place_data.get('id'))
         instance.first_place = first_place
         instance.second_place = second_place
         instance.save()
@@ -107,8 +107,8 @@ class OnlineLinkDetailsSerializer(serializers.ModelSerializer, ValidationMixIn):
         place_data = validated_data.pop('place')
         userprofile_data = validated_data.pop('userprofile')
         instance = super().update(instance, validated_data)
-        place = get_object_or_404(UserProfile.objects.get(pk=place_data.get('id')))
-        userprofile = get_object_or_404(UserProfile.objects.get(pk=userprofile_data.get('id')))
+        place = get_object_or_404(UserProfile, id=place_data.get('id'))
+        userprofile = get_object_or_404(UserProfile, id=userprofile_data.get('id'))
         instance.place = place
         instance.userprofile = userprofile
         instance.save()
