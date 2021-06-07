@@ -24,6 +24,7 @@ urlpatterns = [
     path('login/', views.LoginAPIView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', views.LogoutAPIView.as_view(), name='auth_logout'),
-    path('oauth/google/', views.GoogleSocialAuthView.as_view(), name='google_oauth')
+    path('oauth/google/', views.GoogleAuthRedirectEndpointView.as_view(), name='google_oauth'),
+    path('login/google/', views.GoogleAuthGetUrlView.as_view(), name='google_auth_redirect_url'),
     #path('oauth/', include(oauth_api_urls))
 ]

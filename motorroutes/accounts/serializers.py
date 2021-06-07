@@ -120,6 +120,14 @@ class LoginSerializer(serializers.ModelSerializer):
 
     tokens = serializers.SerializerMethodField()
 
+    def get_tokens(self, obj):
+        user = User.objects.get(email=obj['email'])
+        user_auth_info = UserAuthCredentials.objects.get(user=user)
+        return {
+            'refresh': user_auth_info.get_tokens_for_user()['refresh'],
+            'access': user_auth_info.get_tokens_for_user()['access']
+        }
+
     class Meta:
         model = User
         fields = ['email', 'password', 'username', 'tokens']
@@ -170,15 +178,15 @@ class LogoutSerializer(serializers.Serializer):
 
 
 class GoogleSocialAuthSerializer(serializers.Serializer):
-    auth_token = serializers.CharField()
+    abs_auth_uri = serializers.CharField()
 
-    def validate(self, auth_token):
-        user_data = Google.validate(auth_token)
+    def validate(self, attrs):
+        user_data = Google.validate(attrs['abs_auth_uri'])
         try:
             user_data['sub']
         except Exception as e:
             raise serializers.ValidationError(
-                'The token is invalid or expired. Please login again.'
+                'The token is invalid or expired. Please login again'
             )
 
         if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
@@ -191,3 +199,5 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
 
         return authenticate_social_user(
             provider=provider, user_id=user_id, email=email, name=name)
+
+

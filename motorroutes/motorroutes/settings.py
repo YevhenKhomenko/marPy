@@ -33,7 +33,6 @@ INSTALLED_APPS = [
 
     'oauth2_provider',
     'social_django',
-    'rest_framework_social_oauth2',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
@@ -82,8 +81,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -147,26 +144,24 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-        'rest_framework_social_oauth2.authentication.SocialAuthentication',
+        #for rest_framework_social_oauth2:
+        #'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        #'rest_framework_social_oauth2.authentication.SocialAuthentication',
     ),
 }
 
 SIMPLE_JWT = {
+    # TODO: shorten access token lifetime. Current lifetime is temporary set to 6 hours for testing.
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=6),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
 }
 
-AUTHENTICATION_BACKENDS = (
-   'rest_framework_social_oauth2.backends.DjangoOAuth2',
-   'django.contrib.auth.backends.ModelBackend',
-)
-
 # for debug purposes:
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# do not forget to turn on access in google acc settings for 'less secure apps'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
@@ -174,7 +169,10 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 
+# the same as project secret or generate unique one:
 SOCIAL_SECRET = ''
+
 GOOGLE_CLIENT_ID = ''
 GOOGLE_CLIENT_SECRET = ''
+
 from .local_settings import *

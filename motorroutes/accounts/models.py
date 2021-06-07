@@ -50,6 +50,10 @@ class UserAuthCredentials(models.Model):
 
     is_verified = models.BooleanField(default=False)
 
+    google_id = models.CharField(max_length=255, null=True, blank=True)
+    google_access_token = models.CharField(max_length=255, null=True, blank=True)
+    google_refresh_token = models.CharField(max_length=255, null=True, blank=True)
+
     def __str__(self):
         return 'Auth credentials for {}'.format(self.user.email)
 

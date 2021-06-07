@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from rest_framework import generics
 from rest_framework import views
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
@@ -15,6 +17,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import UserProfile, UserAuthCredentials
 from .serializers import UserProfileListSerializer, UserProfileDetailsSerializer, EmailVerificationSerializer
 from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, GoogleSocialAuthSerializer
+from .socials import Google
+from .social_auth import authenticate_social_user
 from .renderers import UserRenderer
 from .acc_utils import MailSenderUtil
 
@@ -49,7 +53,7 @@ class RegisterView(generics.GenericAPIView):
         user = User.objects.get(email=user_data['email'])
         token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
-        relative_link = reverse('email-verification')
+        relative_link = reverse('email_verification')
         abs_url = 'http://'+current_site+relative_link+"?token="+str(token)
         email_body = 'Hi '+user.username + \
             ' Use the link below to verify your email \n' + abs_url
@@ -66,9 +70,7 @@ class VerifyEmailView(views.APIView):
     def get(self, request):
         token = request.GET.get('token')
         try:
-            print('before decoding')
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            print('after decoding')
             user = User.objects.get(id=payload['user_id'])
             user_auth_info = UserAuthCredentials.objects.get(user=user)
             if not user_auth_info.is_verified:
@@ -102,15 +104,48 @@ class LogoutAPIView(views.APIView):
         return Response("Successful logout", status=status.HTTP_204_NO_CONTENT)
 
 
-class GoogleSocialAuthView(generics.GenericAPIView):
+class GoogleAuthRedirectEndpointView(generics.GenericAPIView):
 
     serializer_class = GoogleSocialAuthSerializer
 
-    def post(self, request):
+    def get(self, request):
+        code = request.GET.get('code')
+        try:
+            validated_user_credentials = Google.validate(code)
+            print(validated_user_credentials)
+        except Exception:
+            raise AuthenticationFailed('Authentication failed. Try again.')
 
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data['tokens']
-        return Response(data, status=status.HTTP_200_OK)
+        iss = validated_user_credentials.get('iss', None)  # must be 'https://accounts.google.com'
+        aud = validated_user_credentials.get('aud', None)  # must be the same as the client id of the project
+        sub = validated_user_credentials.get('sub', None)  # unique google user id
+
+        name = validated_user_credentials.get('name', 'default name')
+        email = validated_user_credentials.get('email', None)
+        provider = 'google'
+        access = validated_user_credentials['access']
+        refresh = validated_user_credentials['refresh']
+        print('got data from user cred in view')
+        if not (sub and aud) or iss != 'https://accounts.google.com':
+            raise AuthenticationFailed('Authentication failed. Try again.')
+
+        print('view checks complete')
+        social_auth_resp = authenticate_social_user(
+            provider=provider,
+            user_id=sub,
+            email=email,
+            name=name,
+            access_token=access,
+            refresh_token=refresh)
+
+        return Response(data=social_auth_resp, status=status.HTTP_200_OK)
+
+
+class GoogleAuthGetUrlView(generics.GenericAPIView):
+    def get(self, request):
+        auth_url = Google.get_authorization_url()
+        return HttpResponseRedirect(auth_url)
+
+
 
 
