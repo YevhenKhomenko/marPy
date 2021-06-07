@@ -100,6 +100,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user_auth_info.save()
 
+        user_profile = UserProfile.objects.create(user=user)
+        user_profile.save()
+
         return user
 
 

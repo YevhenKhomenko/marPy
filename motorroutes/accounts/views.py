@@ -21,6 +21,7 @@ from .socials import Google
 from .social_auth import authenticate_social_user
 from .renderers import UserRenderer
 from .acc_utils import MailSenderUtil
+from .tasks import send_verification_email
 
 import jwt
 
@@ -51,16 +52,9 @@ class RegisterView(generics.GenericAPIView):
         serializer.save()
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
-        relative_link = reverse('email_verification')
-        abs_url = 'http://'+current_site+relative_link+"?token="+str(token)
-        email_body = 'Hi '+user.username + \
-            ' Use the link below to verify your email \n' + abs_url
-        data = {'email_body': email_body, 'to_email': user.email,
-                'email_subject': 'Verify your email'}
+        send_verification_email.delay(user_id=user.id, current_site=current_site)
 
-        MailSenderUtil.send_email(data)
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
@@ -78,7 +72,10 @@ class VerifyEmailView(views.APIView):
                 user_auth_info.save()
             return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as e:
-            return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+            if user is not None:
+                send_verification_email.delay(user_id=user.id, current_site=get_current_site(request).domain)
+            return Response({'error': 'Activation Expired. Another verification email was sent'},
+                            status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as e:
             return Response({'error': 'Invalid token. DecodeError'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -117,7 +114,7 @@ class GoogleAuthRedirectEndpointView(generics.GenericAPIView):
             raise AuthenticationFailed('Authentication failed. Try again.')
 
         iss = validated_user_credentials.get('iss', None)  # must be 'https://accounts.google.com'
-        aud = validated_user_credentials.get('aud', None)  # must be the same as the client id of the project
+        aud = validated_user_credentials.get('aud', None)
         sub = validated_user_credentials.get('sub', None)  # unique google user id
 
         name = validated_user_credentials.get('name', 'default name')
@@ -129,7 +126,6 @@ class GoogleAuthRedirectEndpointView(generics.GenericAPIView):
         if not (sub and aud) or iss != 'https://accounts.google.com':
             raise AuthenticationFailed('Authentication failed. Try again.')
 
-        print('view checks complete')
         social_auth_resp = authenticate_social_user(
             provider=provider,
             user_id=sub,

@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 import random
 from rest_framework.exceptions import AuthenticationFailed
-from .models import UserAuthCredentials
+from .models import UserAuthCredentials, UserProfile
 
 
 def generate_username(name):
@@ -45,10 +45,8 @@ def authenticate_social_user(provider, user_id, email, name, access_token, refre
             'username': username, 'email': email,
             'password': settings.SOCIAL_SECRET
         }
-        print('generated username')
         user = User.objects.create_user(**user)
         user.save()
-        print('created user object')
         user_auth_info = UserAuthCredentials.objects.create(
             user=user,
             is_verified=True,
@@ -58,13 +56,14 @@ def authenticate_social_user(provider, user_id, email, name, access_token, refre
             google_refresh_token=refresh_token
         )
         user_auth_info.save()
-        print('created user auth info object')
+
+        user_account = UserProfile.objects.create(user=user)
+        user_account.save()
 
         new_user = authenticate(
             username=username, password=settings.SOCIAL_SECRET)
-        print('authenticated user')
         new_user_auth_info = UserAuthCredentials.objects.get(user=new_user)
-        print('got user auth credentials obj')
+
         return {
             'email': new_user.email,
             'username': new_user.username,

@@ -144,15 +144,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        #for rest_framework_social_oauth2:
-        #'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
-        #'rest_framework_social_oauth2.authentication.SocialAuthentication',
     ),
 }
 
 SIMPLE_JWT = {
-    # TODO: shorten access token lifetime. Current lifetime is temporary set to 6 hours for testing.
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=6),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True
@@ -174,5 +170,13 @@ SOCIAL_SECRET = ''
 
 GOOGLE_CLIENT_ID = ''
 GOOGLE_CLIENT_SECRET = ''
+
+# REDIS related settings
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
 
 from .local_settings import *
