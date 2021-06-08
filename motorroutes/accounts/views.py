@@ -3,7 +3,6 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
 
 from rest_framework import generics
 from rest_framework import views
@@ -12,7 +11,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile, UserAuthCredentials
 from .serializers import UserProfileListSerializer, UserProfileDetailsSerializer, EmailVerificationSerializer
@@ -20,21 +18,21 @@ from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, 
 from .socials import Google
 from .social_auth import authenticate_social_user
 from .renderers import UserRenderer
-from .acc_utils import MailSenderUtil
 from .tasks import send_verification_email
 
 import jwt
 
 
-class UserProfileList(generics.ListCreateAPIView):
+class UserProfileList(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileListSerializer
-    permission_classes = [IsAdminUser]
 
 
-class UserProfileDetails(generics.RetrieveUpdateDestroyAPIView):
+# TODO: write object permissions
+class UserProfileDetails(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileDetailsSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))

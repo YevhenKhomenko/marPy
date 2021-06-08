@@ -7,29 +7,19 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import UserProfile, UserAuthCredentials
 from .socials import Google
 from .social_auth import authenticate_social_user
 
 
-class ValidationMixIn():
+class ValidationMixIn:
     def validate_user_profile(self, data):
         u_count = UserProfile.objects.filter(id=data.get('id')).count()
         if u_count == 1:
             return data
         else:
             raise serializers.ValidationError("wrong UserProfile id")
-
-
-class UserNestedSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-    email = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'email']
 
 
 class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
@@ -44,6 +34,17 @@ class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
         fields = ['id', 'date_of_birth', 'phone_number', 'gender', 'bio']
 
 
+class UserNestedSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    username = serializers.CharField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name']
+        read_only_fields = ['id', 'email']
+
+
 class UserProfileListSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
 
@@ -52,12 +53,42 @@ class UserProfileListSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'phone_number']
 
 
+# TODO: validate username
 class UserProfileDetailsSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
+    phone_number = serializers.CharField()
+    date_of_birth = serializers.DateField()
+    # Was commented for testing purposes:
+    # photo = serializers.ImageField()
+    bio = serializers.CharField()
+    gender = serializers.CharField()
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'phone_number', 'photo', 'user', 'created_by', 'bio', 'gender']
+        fields = ['phone_number', 'user', 'bio', 'gender', 'date_of_birth']  # 'photo'
+
+    def update(self, instance, validated_data):
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.gender = validated_data.get('gender', instance.gender)
+        user = instance.user
+        instance.save()
+
+        user_validated_data = validated_data['user']
+        user.username = user_validated_data.get('username', user.username)
+        user.first_name = user_validated_data.get('first_name', user.first_name)
+        user.last_name = user_validated_data.get('last_name', user.last_name)
+        user.save()
+        return instance
+
+    def validate(self, attrs):
+        user_attrs = attrs['user']
+        username = user_attrs.get('username', None)
+        if username is not None:
+            if User.objects.filter(username=username).exists():
+                raise serializers.ValidationError({"username": "This username already exists."})
+        return attrs
 
 
 class RegisterSerializer(serializers.ModelSerializer):

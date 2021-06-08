@@ -1,8 +1,20 @@
 from rest_framework import permissions
 
 
-class IsProfileOwner(permissions.BasePermission):
+class IsProfileOwnerOrReadOnly(permissions.BasePermission):
     """
-    If the user is not owner, read and write only allowed
+    Custom permissions for ProfileViewSet to only allow user to edit their own profile. Otherwise, Get and Post Only.
     """
-    pass
+
+    def has_permission(self, request, view):
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if not request.user.is_anonymous:
+            return request.user.profile == obj
+
+        return False
+
