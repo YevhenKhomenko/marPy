@@ -35,9 +35,10 @@ class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
 
 
 class UserNestedSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    username = serializers.CharField()
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
+    email = serializers.CharField()
 
     class Meta:
         model = User
@@ -56,12 +57,12 @@ class UserProfileListSerializer(serializers.ModelSerializer):
 # TODO: validate username
 class UserProfileDetailsSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
-    phone_number = serializers.CharField()
-    date_of_birth = serializers.DateField()
+    phone_number = serializers.CharField(required=False)
+    date_of_birth = serializers.DateField(required=False)
     # Was commented for testing purposes:
     # photo = serializers.ImageField()
-    bio = serializers.CharField()
-    gender = serializers.CharField()
+    bio = serializers.CharField(required=False)
+    gender = serializers.CharField(required=False)
 
     class Meta:
         model = UserProfile
@@ -82,11 +83,13 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
         user.save()
         return instance
 
+    # TODO: find a better way to validate whether the user passes new non-unique username or his previous one
+    # !!!can cause IntegrityError!!!
     def validate(self, attrs):
         user_attrs = attrs['user']
-        username = user_attrs.get('username', None)
-        if username is not None:
-            if User.objects.filter(username=username).exists():
+        username = user_attrs.get('username', '')
+        if username != '' and User.objects.filter(username=username).exists():
+            if User.objects.get(username=username).email != user_attrs.get('email', ''):
                 raise serializers.ValidationError({"username": "This username already exists."})
         return attrs
 

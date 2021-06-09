@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
 
 from .models import UserProfile, UserAuthCredentials
+from .permissions import IsProfileOwnerOrReadOnly
 from .serializers import UserProfileListSerializer, UserProfileDetailsSerializer, EmailVerificationSerializer
 from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, GoogleSocialAuthSerializer
 from .socials import Google
@@ -31,8 +32,8 @@ class UserProfileList(generics.ListAPIView):
 
 # TODO: write object permissions
 class UserProfileDetails(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, IsProfileOwnerOrReadOnly]
     serializer_class = UserProfileDetailsSerializer
-    # permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
