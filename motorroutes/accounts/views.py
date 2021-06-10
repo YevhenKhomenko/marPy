@@ -34,6 +34,8 @@ class UserProfileList(generics.ListAPIView):
 class UserProfileDetails(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsProfileOwnerOrReadOnly]
     serializer_class = UserProfileDetailsSerializer
+    # ???:
+    # self.check_object_permissions(request, obj)
 
     def get_object(self):
         return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
@@ -52,7 +54,10 @@ class RegisterView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
         current_site = get_current_site(request).domain
-        send_verification_email.delay(user_id=user.id, current_site=current_site)
+        if settings.DEFFERED_OPERATIONS:
+            send_verification_email.delay(user_id=user.id, current_site=current_site)
+        else:
+            send_verification_email(user_id=user.id, current_site=current_site)
 
         return Response(user_data, status=status.HTTP_201_CREATED)
 
