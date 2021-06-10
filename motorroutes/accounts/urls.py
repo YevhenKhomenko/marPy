@@ -10,6 +10,7 @@ from . import views
 urlpatterns = [
     path('', views.UserProfileList.as_view(), name='user_profile_list'),
     path('<int:user_profile_id>/', views.UserProfileDetails.as_view(), name='user_profile_details'),
+    path('profile-only/<int:user_profile_id>/', views.UserProfileOnly.as_view(), name='user_profile'),
     path('register/', views.RegisterView.as_view(), name='auth_register'),
     path('email-verification/', views.VerifyEmailView.as_view(), name="email-verification"),
     path('login/', views.LoginAPIView.as_view(), name='token_obtain_pair'),

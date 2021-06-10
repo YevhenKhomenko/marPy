@@ -8,14 +8,11 @@ class IsProfileOwnerOrReadOnly(permissions.BasePermission):
     user to edit their own profile. Otherwise, Get and Post Only.
     """
 
-    """
     def has_permission(self, request, view):
         return True
-        return request.user and request.user.is_authenticated
-    """
 
     def has_object_permission(self, request, view, obj):
-        print('entered has obj perm')
+        # 1/0
         if request.method in permissions.SAFE_METHODS:
             return True
         if not request.user.is_anonymous:

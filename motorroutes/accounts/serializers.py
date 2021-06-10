@@ -81,6 +81,29 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
         return instance
 
 
+class UserProfileOnlySerializer(serializers.ModelSerializer):
+    phone_number = serializers.CharField(required=False)
+    date_of_birth = serializers.DateField(required=False)
+    # Was commented for testing purposes:
+    # photo = serializers.ImageField(required=False)
+    bio = serializers.CharField(required=False)
+    gender = serializers.CharField(required=False)
+
+    class Meta:
+        model = UserProfile
+        fields = ['phone_number', 'bio', 'gender', 'date_of_birth']  # 'photo'
+
+    def update(self, instance, validated_data):
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.photo = validated_data.get('photo', instance.photo)
+        instance.save()
+
+        return instance
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
