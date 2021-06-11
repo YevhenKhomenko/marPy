@@ -12,7 +12,6 @@ class IsProfileOwnerOrReadOnly(permissions.BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        # 1/0
         if request.method in permissions.SAFE_METHODS:
             return True
         if not request.user.is_anonymous:

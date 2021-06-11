@@ -16,7 +16,6 @@ from .models import UserProfile, UserAuthCredentials
 from .permissions import IsProfileOwnerOrReadOnly
 from .serializers import UserProfileListSerializer, UserProfileDetailsSerializer, EmailVerificationSerializer
 from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, GoogleSocialAuthSerializer
-from .serializers import UserProfileOnlySerializer
 from .socials import Google
 from .social_auth import authenticate_social_user
 from .renderers import UserRenderer
@@ -24,6 +23,8 @@ from .tasks import send_verification_email
 
 import jwt
 
+
+# TODO: add JsonResponse !!!!
 
 class UserProfileList(generics.ListAPIView):
     permission_classes = [IsAdminUser]
@@ -34,19 +35,11 @@ class UserProfileList(generics.ListAPIView):
 class UserProfileDetails(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsProfileOwnerOrReadOnly]
     serializer_class = UserProfileDetailsSerializer
-    # ???:
-    # self.check_object_permissions(request, obj)
 
     def get_object(self):
-        return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
-
-
-class UserProfileOnly(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsProfileOwnerOrReadOnly]
-    serializer_class = UserProfileOnlySerializer
-
-    def get_object(self):
-        return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
+        obj = get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class RegisterView(generics.GenericAPIView):
