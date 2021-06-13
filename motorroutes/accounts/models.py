@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps_generic.whodidit.models import WhoDidIt
 
 
-class UserProfile(WhoDidIt):
+class UserProfile(models.Model):
     class Gender:
         male = 'm'
         female = 'f'
@@ -21,9 +21,9 @@ class UserProfile(WhoDidIt):
         on_delete=models.CASCADE,
     )
 
-    date_of_birth = models.DateField(verbose_name="Date Of Birth", default=None)
-    phone_number = models.CharField(verbose_name='Phone Number', max_length=13)
-    photo = models.ImageField(verbose_name='Profile Photo', upload_to=None, blank=True)
+    date_of_birth = models.DateField(verbose_name="Date Of Birth", null=True, blank=True)
+    phone_number = models.CharField(verbose_name='Phone Number', max_length=13, null=True, blank=True)
+    photo = models.ImageField(verbose_name='Profile Photo', upload_to=None, null=True, blank=True)
     bio = models.CharField(verbose_name='Profile Description', max_length=250, blank=True)
     gender = models.CharField(verbose_name='Gender', max_length=1, choices=GENDERS, blank=True)
 
@@ -49,6 +49,10 @@ class UserAuthCredentials(models.Model):
         null=False, default=AUTH_PROVIDERS.get('email'))
 
     is_verified = models.BooleanField(default=False)
+
+    google_id = models.CharField(max_length=255, null=True, blank=True)
+    google_access_token = models.CharField(max_length=255, null=True, blank=True)
+    google_refresh_token = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return 'Auth credentials for {}'.format(self.user.email)

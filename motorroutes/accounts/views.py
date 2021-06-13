@@ -1,38 +1,45 @@
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
 
 from rest_framework import generics
 from rest_framework import views
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserProfile, UserAuthCredentials
+from .permissions import IsProfileOwnerOrReadOnly
 from .serializers import UserProfileListSerializer, UserProfileDetailsSerializer, EmailVerificationSerializer
 from .serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, GoogleSocialAuthSerializer
+from .socials import Google
+from .social_auth import authenticate_social_user
 from .renderers import UserRenderer
-from .acc_utils import MailSenderUtil
+from .tasks import send_verification_email
 
 import jwt
 
 
-class UserProfileList(generics.ListCreateAPIView):
+# TODO: add JsonResponse !!!!
+
+class UserProfileList(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileListSerializer
-    permission_classes = [IsAdminUser]
 
 
-class UserProfileDetails(generics.RetrieveUpdateDestroyAPIView):
+class UserProfileDetails(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, IsProfileOwnerOrReadOnly]
     serializer_class = UserProfileDetailsSerializer
-    permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
+        obj = get_object_or_404(UserProfile, pk=self.kwargs.get('user_profile_id'))
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class RegisterView(generics.GenericAPIView):
@@ -47,16 +54,12 @@ class RegisterView(generics.GenericAPIView):
         serializer.save()
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
-        token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(request).domain
-        relative_link = reverse('email-verification')
-        abs_url = 'http://'+current_site+relative_link+"?token="+str(token)
-        email_body = 'Hi '+user.username + \
-            ' Use the link below to verify your email \n' + abs_url
-        data = {'email_body': email_body, 'to_email': user.email,
-                'email_subject': 'Verify your email'}
+        if settings.DEFFERED_OPERATIONS:
+            send_verification_email.delay(user_id=user.id, current_site=current_site)
+        else:
+            send_verification_email(user_id=user.id, current_site=current_site)
 
-        MailSenderUtil.send_email(data)
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
@@ -66,9 +69,7 @@ class VerifyEmailView(views.APIView):
     def get(self, request):
         token = request.GET.get('token')
         try:
-            print('before decoding')
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            print('after decoding')
             user = User.objects.get(id=payload['user_id'])
             user_auth_info = UserAuthCredentials.objects.get(user=user)
             if not user_auth_info.is_verified:
@@ -76,7 +77,10 @@ class VerifyEmailView(views.APIView):
                 user_auth_info.save()
             return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as e:
-            return Response({'error': 'Activation Expired'}, status=status.HTTP_400_BAD_REQUEST)
+            if user is not None:
+                send_verification_email.delay(user_id=user.id, current_site=get_current_site(request).domain)
+            return Response({'error': 'Activation Expired. Another verification email was sent'},
+                            status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as e:
             return Response({'error': 'Invalid token. DecodeError'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -102,15 +106,47 @@ class LogoutAPIView(views.APIView):
         return Response("Successful logout", status=status.HTTP_204_NO_CONTENT)
 
 
-class GoogleSocialAuthView(generics.GenericAPIView):
+class GoogleAuthRedirectEndpointView(generics.GenericAPIView):
 
     serializer_class = GoogleSocialAuthSerializer
 
-    def post(self, request):
+    def get(self, request):
+        code = request.GET.get('code')
+        try:
+            validated_user_credentials = Google.validate(code)
+            print(validated_user_credentials)
+        except Exception:
+            raise AuthenticationFailed('Authentication failed. Try again.')
 
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data['tokens']
-        return Response(data, status=status.HTTP_200_OK)
+        iss = validated_user_credentials.get('iss', None)  # must be 'https://accounts.google.com'
+        aud = validated_user_credentials.get('aud', None)
+        sub = validated_user_credentials.get('sub', None)  # unique google user id
+
+        name = validated_user_credentials.get('name', 'default name')
+        email = validated_user_credentials.get('email', None)
+        provider = 'google'
+        access = validated_user_credentials['access']
+        refresh = validated_user_credentials['refresh']
+        print('got data from user cred in view')
+        if not (sub and aud) or iss != 'https://accounts.google.com':
+            raise AuthenticationFailed('Authentication failed. Try again.')
+
+        social_auth_resp = authenticate_social_user(
+            provider=provider,
+            user_id=sub,
+            email=email,
+            name=name,
+            access_token=access,
+            refresh_token=refresh)
+
+        return Response(data=social_auth_resp, status=status.HTTP_200_OK)
+
+
+class GoogleAuthGetUrlView(generics.GenericAPIView):
+    def get(self, request):
+        auth_url = Google.get_authorization_url()
+        return HttpResponseRedirect(auth_url)
+
+
 
 

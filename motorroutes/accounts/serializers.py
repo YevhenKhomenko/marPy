@@ -7,29 +7,19 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import UserProfile, UserAuthCredentials
 from .socials import Google
 from .social_auth import authenticate_social_user
 
 
-class ValidationMixIn():
+class ValidationMixIn:
     def validate_user_profile(self, data):
         u_count = UserProfile.objects.filter(id=data.get('id')).count()
         if u_count == 1:
             return data
         else:
             raise serializers.ValidationError("wrong UserProfile id")
-
-
-class UserNestedSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField()
-    email = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'email']
 
 
 class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
@@ -44,6 +34,16 @@ class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
         fields = ['id', 'date_of_birth', 'phone_number', 'gender', 'bio']
 
 
+class UserNestedSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'first_name', 'last_name']
+        read_only_fields = ['id', 'email', 'username']
+
+
 class UserProfileListSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
 
@@ -54,10 +54,31 @@ class UserProfileListSerializer(serializers.ModelSerializer):
 
 class UserProfileDetailsSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
+    phone_number = serializers.CharField(required=False)
+    date_of_birth = serializers.DateField(required=False)
+    # Was commented for testing purposes:
+    # photo = serializers.ImageField(required=False)
+    bio = serializers.CharField(required=False)
+    gender = serializers.CharField(required=False)
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'phone_number', 'photo', 'user', 'created_by', 'bio', 'gender']
+        fields = ['phone_number', 'user', 'bio', 'gender', 'date_of_birth']  # 'photo'
+
+    def update(self, instance, validated_data):
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.photo = validated_data.get('photo', instance.photo)
+        user = instance.user
+        instance.save()
+
+        user_validated_data = validated_data['user']
+        user.first_name = user_validated_data.get('first_name', user.first_name)
+        user.last_name = user_validated_data.get('last_name', user.last_name)
+        user.save()
+        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -100,6 +121,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user_auth_info.save()
 
+        user_profile = UserProfile.objects.create(user=user)
+        user_profile.save()
+
         return user
 
 
@@ -119,6 +143,14 @@ class LoginSerializer(serializers.ModelSerializer):
         max_length=255, min_length=3, read_only=True)
 
     tokens = serializers.SerializerMethodField()
+
+    def get_tokens(self, obj):
+        user = User.objects.get(email=obj['email'])
+        user_auth_info = UserAuthCredentials.objects.get(user=user)
+        return {
+            'refresh': user_auth_info.get_tokens_for_user()['refresh'],
+            'access': user_auth_info.get_tokens_for_user()['access']
+        }
 
     class Meta:
         model = User
@@ -170,15 +202,15 @@ class LogoutSerializer(serializers.Serializer):
 
 
 class GoogleSocialAuthSerializer(serializers.Serializer):
-    auth_token = serializers.CharField()
+    abs_auth_uri = serializers.CharField()
 
-    def validate(self, auth_token):
-        user_data = Google.validate(auth_token)
+    def validate(self, attrs):
+        user_data = Google.validate(attrs['abs_auth_uri'])
         try:
             user_data['sub']
         except Exception as e:
             raise serializers.ValidationError(
-                'The token is invalid or expired. Please login again.'
+                'The token is invalid or expired. Please login again'
             )
 
         if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
@@ -191,3 +223,5 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
 
         return authenticate_social_user(
             provider=provider, user_id=user_id, email=email, name=name)
+
+

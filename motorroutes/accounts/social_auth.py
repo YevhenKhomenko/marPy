@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-import os
 import random
 from rest_framework.exceptions import AuthenticationFailed
-from .models import UserAuthCredentials
+from .models import UserAuthCredentials, UserProfile
 
 
 def generate_username(name):
@@ -17,9 +16,9 @@ def generate_username(name):
         return generate_username(random_username)
 
 
-def authenticate_social_user(provider, user_id, email, name):
+def authenticate_social_user(provider, user_id, email, name, access_token, refresh_token):
     filtered_user_by_email = User.objects.filter(email=email)
-
+    print('tried to find user by email')
     if filtered_user_by_email.exists():
         user = User.objects.get(email=email)
         user_auth_info = UserAuthCredentials.objects.get(user=user)
@@ -49,14 +48,22 @@ def authenticate_social_user(provider, user_id, email, name):
         user = User.objects.create_user(**user)
         user.save()
         user_auth_info = UserAuthCredentials.objects.create(
-            user=user, is_verified=True,
-            auth_provider=provider
+            user=user,
+            is_verified=True,
+            auth_provider=provider,
+            google_id=user_id,
+            google_access_token=access_token,
+            google_refresh_token=refresh_token
         )
         user_auth_info.save()
+
+        user_account = UserProfile.objects.create(user=user)
+        user_account.save()
 
         new_user = authenticate(
             username=username, password=settings.SOCIAL_SECRET)
         new_user_auth_info = UserAuthCredentials.objects.get(user=new_user)
+
         return {
             'email': new_user.email,
             'username': new_user.username,
