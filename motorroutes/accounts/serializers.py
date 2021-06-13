@@ -37,13 +37,11 @@ class UserProfileNestedSerializer(serializers.ModelSerializer, ValidationMixIn):
 class UserNestedSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
-    username = serializers.CharField(required=False)
-    email = serializers.CharField()
 
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'first_name', 'last_name']
-        read_only_fields = ['id', 'email']
+        read_only_fields = ['id', 'email', 'username']
 
 
 class UserProfileListSerializer(serializers.ModelSerializer):
@@ -54,13 +52,12 @@ class UserProfileListSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'phone_number']
 
 
-# TODO: validate username
 class UserProfileDetailsSerializer(serializers.ModelSerializer):
     user = UserNestedSerializer()
     phone_number = serializers.CharField(required=False)
     date_of_birth = serializers.DateField(required=False)
     # Was commented for testing purposes:
-    # photo = serializers.ImageField()
+    # photo = serializers.ImageField(required=False)
     bio = serializers.CharField(required=False)
     gender = serializers.CharField(required=False)
 
@@ -73,25 +70,15 @@ class UserProfileDetailsSerializer(serializers.ModelSerializer):
         instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
         instance.bio = validated_data.get('bio', instance.bio)
         instance.gender = validated_data.get('gender', instance.gender)
+        instance.photo = validated_data.get('photo', instance.photo)
         user = instance.user
         instance.save()
 
         user_validated_data = validated_data['user']
-        user.username = user_validated_data.get('username', user.username)
         user.first_name = user_validated_data.get('first_name', user.first_name)
         user.last_name = user_validated_data.get('last_name', user.last_name)
         user.save()
         return instance
-
-    # TODO: find a better way to validate whether the user passes new non-unique username or his previous one
-    # !!!can cause IntegrityError!!!
-    def validate(self, attrs):
-        user_attrs = attrs['user']
-        username = user_attrs.get('username', '')
-        if username != '' and User.objects.filter(username=username).exists():
-            if User.objects.get(username=username).email != user_attrs.get('email', ''):
-                raise serializers.ValidationError({"username": "This username already exists."})
-        return attrs
 
 
 class RegisterSerializer(serializers.ModelSerializer):
