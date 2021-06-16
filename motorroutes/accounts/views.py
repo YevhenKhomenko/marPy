@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics
@@ -23,8 +23,6 @@ from .tasks import send_verification_email
 
 import jwt
 
-
-# TODO: add JsonResponse !!!!
 
 class UserProfileList(generics.ListAPIView):
     permission_classes = [IsAdminUser]
@@ -55,7 +53,7 @@ class RegisterView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
         current_site = get_current_site(request).domain
-        if settings.DEFFERED_OPERATIONS:
+        if settings.DEFERRED_OPERATIONS:
             send_verification_email.delay(user_id=user.id, current_site=current_site)
         else:
             send_verification_email(user_id=user.id, current_site=current_site)
@@ -75,14 +73,19 @@ class VerifyEmailView(views.APIView):
             if not user_auth_info.is_verified:
                 user_auth_info.is_verified = True
                 user_auth_info.save()
-            return Response({'email': 'Successfully activated'}, status=status.HTTP_200_OK)
+            return JsonResponse({'email': 'Successfully activated'},
+                                status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as e:
             if user is not None:
-                send_verification_email.delay(user_id=user.id, current_site=get_current_site(request).domain)
-            return Response({'error': 'Activation Expired. Another verification email was sent'},
-                            status=status.HTTP_400_BAD_REQUEST)
+                if settings.DEFERRED_OPERATIONS:
+                    send_verification_email.delay(user_id=user.id, current_site=get_current_site(request).domain)
+                else:
+                    send_verification_email(user_id=user.id, current_site=get_current_site(request).domain)
+            return JsonResponse({'error': 'Activation Expired. Another verification email was sent'},
+                                status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as e:
-            return Response({'error': 'Invalid token. DecodeError'}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({'error': 'Invalid token. DecodeError'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginAPIView(generics.GenericAPIView):
