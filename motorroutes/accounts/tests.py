@@ -10,14 +10,16 @@ from .models import UserProfile, UserAuthCredentials
 
 
 class AccountsApiTest(APITestCase):
-    def setUp(self):
+
+    @staticmethod
+    def reg_test_user(username, email, first_name, last_name, password):
         user = User.objects.create_user(
-            username='test_user',
-            email='test@test.com',
-            first_name='first name',
-            last_name='last name'
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name
         )
-        user.set_password('Saf3Pas5W0rD')
+        user.set_password(password)
         user.save()
 
         user_auth_cred = UserAuthCredentials.objects.create(
@@ -26,14 +28,41 @@ class AccountsApiTest(APITestCase):
         )
         user_auth_cred.save()
 
-        self.access_token = None
-        self.refresh_token = None
-        self.user_profile_pk = None
-        self.user_id = None
-        self.email = 'test_api@test.com'
-        self.username = 'user_test_api'
-        self.first_name = 'test_first'
-        self.last_name = 'test_last'
+        user_profile = UserProfile.objects.create(user=user)
+        user_profile.save()
+
+    def login_test_user(self, email, password):
+        login_url = reverse('login')
+        login_data = {
+            'email': email,
+            'password': password
+        }
+        response = self.client.post(login_url, login_data, format='json')
+
+        tokens = response.data.get('tokens', [])
+        access_token = tokens['access']
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer {}'.format(access_token))
+
+        authorized_user = User.objects.get(email=response.data['email'])
+        user_profile_pk = UserProfile.objects.get(user=authorized_user).pk
+        user_id = authorized_user.id
+        return {'user_profile_pk': user_profile_pk, 'user_id': user_id, 'refresh': tokens['refresh']}
+
+    def setUp(self):
+
+        self.test_user_email = 'test@test.com'
+        self.test_user_password = 'Saf3Pas5W0rD'
+        self.test_user_username = 'test_user'
+        self.test_user_first_name = 'first name'
+        self.test_user_last_name = 'last name'
+
+        self.reg_test_user(
+            username=self.test_user_username,
+            email=self.test_user_email,
+            first_name=self.test_user_first_name,
+            last_name=self.test_user_last_name,
+            password=self.test_user_password
+            )
 
     def test_user_created(self):
         queryset = User.objects.filter(email='test@test.com')
@@ -44,10 +73,10 @@ class AccountsApiTest(APITestCase):
         reg_data = {
             'password': 'Saf3Pas5W0rD',
             'password2': 'Saf3Pas5W0rD',
-            'email': self.email,
-            'username': self.username,
-            'first_name': self.first_name,
-            'last_name': self.last_name
+            'email': 'test_api_reg@test.com',
+            'username': 'user_reg_test_api',
+            'first_name': 'test_first_reg',
+            'last_name': 'test_last_reg'
         }
         response = self.client.post(reg_url, reg_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -61,18 +90,15 @@ class AccountsApiTest(APITestCase):
         self.assertEqual(registered_user_profile.count(), 1)
         self.assertEqual(registered_user_credentials.count(), 1)
 
-        registered_user_credentials = UserAuthCredentials.objects.get(user=registered_user)
-        registered_user_credentials.set_verification_status(is_verified=True)
-
     def test_user_reg_api_fail(self):
         reg_url = reverse('register')
         reg_data = {
-            'password': 'Saf3Pas5W0rD',
-            'password2': 'Saf3Pas5W0rD',
-            'email': self.email,
-            'username': self.username,
-            'first_name': self.first_name,
-            'last_name': self.last_name
+            'password': self.test_user_password,
+            'password2': self.test_user_password,
+            'username': self.test_user_username,
+            'email': self.test_user_email,
+            'first_name': self.test_user_first_name,
+            'last_name': self.test_user_last_name
         }
         response = self.client.post(reg_url, reg_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -80,8 +106,8 @@ class AccountsApiTest(APITestCase):
     def test_user_login_api(self):
         login_url = reverse('login')
         login_data = {
-            'email': self.email,
-            'password': 'Saf3Pas5W0rD'
+            'email': self.test_user_email,
+            'password': self.test_user_password
         }
         response = self.client.post(login_url, login_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -95,32 +121,32 @@ class AccountsApiTest(APITestCase):
     def test_user_login_api_fail(self):
         login_url = reverse('login')
         login_data = {
-            'email': self.email,
-            'password': '123WRONGPaSSWORD123'
+            'email': self.test_user_email,
+            'password': '123WRONGPaSsWORD123'
         }
         response = self.client.post(login_url, login_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        authorized_user = User.objects.get(email=response.data['email'])
-        self.user_profile_pk = UserProfile.objects.get(user=authorized_user).pk
-        self.user_id = authorized_user.id
-
     def test_get_profile_details_api(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer {}'.format(self.access_token))
-        profile_details_url = '/api/accounts/{}/'.format(self.user_profile_pk)
+        user_login_info_dict = self.login_test_user(email=self.test_user_email, password=self.test_user_password)
+        user_profile_pk = user_login_info_dict['user_profile_pk']
+        profile_details_url = '/api/accounts/{}/'.format(user_profile_pk)
         response = self.client.get(profile_details_url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_put_profile_details_api(self):
-        profile_details_url = '/api/accounts/{}/'.format(self.user_profile_pk)
+        user_login_info_dict = self.login_test_user(email=self.test_user_email, password=self.test_user_password)
+        user_profile_pk = user_login_info_dict['user_profile_pk']
+        user_id = user_login_info_dict['user_id']
+        profile_details_url = '/api/accounts/{}/'.format(user_profile_pk)
         profile_data = {
             "phone_number": "380952788214",
             "user": {
-                "id": self.user_id,
-                "email": self.email,
-                "username": self.username,
-                "first_name": self.first_name,
-                "last_name": self.last_name
+                "id": user_id,
+                "email": self.test_user_email,
+                "username": self.test_user_username,
+                "first_name": self.test_user_first_name,
+                "last_name": self.test_user_last_name
             },
             "bio": "api test user bio",
             "gender": "m",
@@ -131,41 +157,58 @@ class AccountsApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_put_profile_info_permission_fail(self):
-        login_data = {
-            'email': 'test@test.com',
-            'password': 'Saf3Pas5W0rD'
-        }
+        user_login_info_dict = self.login_test_user(email=self.test_user_email, password=self.test_user_password)
+        user_profile_pk = user_login_info_dict['user_profile_pk']
+        user_id = user_login_info_dict['user_id']
 
-        login_url = reverse('login')
-        response = self.client.post(login_url, login_data, format='json')
-
-        tokens = response.data.get('tokens', [])
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer {}'.format(tokens['access']))
-
-        profile_details_url = '/api/accounts/{}/'.format(self.user_profile_pk)
+        profile_details_url = '/api/accounts/{}/'.format(user_profile_pk)
         profile_data = {
             "phone_number": "380952788214",
             "user": {
-                "id": self.user_id,
-                "email": self.email,
-                "username": self.username,
-                "first_name": self.first_name,
-                "last_name": self.last_name
+                "id": user_id,
+                "email": self.test_user_email,
+                "username": self.test_user_username,
+                "first_name": self.test_user_first_name,
+                "last_name": self.test_user_last_name
             },
             "bio": "api test user bio",
             "gender": "m",
             "date_of_birth": "2021-06-07"
         }
+
+        self.reg_test_user(
+            username='permission_fail',
+            email='permission@fail.com',
+            first_name='permission_fail_first',
+            last_name='permission_fail_last',
+            password=self.test_user_password
+        )
+        self.login_test_user(
+                    email='permission@fail.com',
+                    password=self.test_user_password
+        )
+
         response = self.client.put(profile_details_url, profile_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_logout_api(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer {}'.format(self.access_token))
+        user_login_info_dict = self.login_test_user(email=self.test_user_email, password=self.test_user_password)
         request_data = {
-            'refresh': self.refresh_token
+            'refresh': user_login_info_dict['refresh']
         }
         logout_url = reverse('logout')
         response = self.client.post(logout_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_logout_api_fail(self):
+        user_login_info_dict = self.login_test_user(email=self.test_user_email, password=self.test_user_password)
+        request_data = {
+            'refresh': user_login_info_dict['refresh']
+        }
+        logout_url = reverse('logout')
+        self.client.post(logout_url, request_data, format='json')
+        response = self.client.post(logout_url, request_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 
