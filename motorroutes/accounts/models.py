@@ -64,3 +64,6 @@ class UserAuthCredentials(models.Model):
             'access': str(refresh.access_token)
         }
 
+    def set_verification_status(self, is_verified=False):
+        self.is_verified = is_verified
+
