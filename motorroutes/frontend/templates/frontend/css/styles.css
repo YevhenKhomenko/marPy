@@ -1,0 +1,39 @@
+/* maprecommendation section*/
+.colored-section{
+  background-color: #fff;
+}
+#maprecommendation{
+  background-color: #ef8172;
+}
+
+.carousel-item{
+  padding: 7% 15%;
+}
+
+.map-container-5{
+  overflow:hidden;
+  padding-bottom:56.25%;
+  position:relative;
+  height:0;
+}
+.map-container-5 iframe{
+  left:0;
+  top:0;
+  height:100%;
+  width:100%;
+  position:absolute;
+}
+
+/* get-coordinate section*/
+#get-coordinate{
+  padding: 10px 20% 10px 20%;
+}
+
+.get-coordinate-col{
+  padding: 3% 2%;
+}
+.get-coordinate-text{
+  font-weight: 500;
+  font-size: 3rem;
+  line-height: 1.5;
+}
