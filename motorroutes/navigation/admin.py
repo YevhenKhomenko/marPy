@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import Location, Points, Routes
+from .models import UserLocation, Points, Routes
 
 
-admin.site.register(Location)
+admin.site.register(UserLocation)
 
 admin.site.register(Points)
 

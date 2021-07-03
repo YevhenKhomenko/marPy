@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'statistic.apps.StatisticConfig',
     'payments.apps.PaymentsConfig',
     'gallery.apps.GalleryConfig',
+    'data_upload.apps.DataUploadConfig',
     'frontend', # enable the frontend app
 
 
