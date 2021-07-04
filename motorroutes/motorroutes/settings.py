@@ -25,14 +25,12 @@ SECRET_KEY = ''
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
 INSTALLED_APPS = [
 
-    'oauth2_provider',
-    'social_django',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
@@ -154,12 +152,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True
 }
 
-# for debug purposes:
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # do not forget to turn on access in google acc settings for 'less secure apps'
-"""
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
@@ -167,7 +160,6 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 
-"""
 
 # the same as project secret or generate unique one:
 SOCIAL_SECRET = ''
