@@ -16,9 +16,8 @@ def generate_username(name):
         return generate_username(random_username)
 
 
-def authenticate_social_user(provider, user_id, email, name, access_token, refresh_token):
+def authenticate_google_social_user(provider, user_id, email, name, access_token, refresh_token):
     filtered_user_by_email = User.objects.filter(email=email)
-    print('tried to find user by email')
     if filtered_user_by_email.exists():
         user = User.objects.get(email=email)
         user_auth_info = UserAuthCredentials.objects.get(user=user)
