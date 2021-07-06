@@ -9,12 +9,12 @@ from . import views
 
 urlpatterns = [
     path('', views.UserProfileList.as_view(), name='user_profile_list'),
-    path('<int:user_profile_id>/', views.UserProfileDetails.as_view(), name='user_profile_details'),
-    path('register/', views.RegisterView.as_view(), name='auth_register'),
+    path('<int:user_profile_id>/', views.UserProfileDetails.as_view(), name='user-profile-details'),
+    path('register/', views.RegisterView.as_view(), name='register'),
     path('email-verification/', views.VerifyEmailView.as_view(), name="email-verification"),
-    path('login/', views.LoginAPIView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('logout/', views.LogoutAPIView.as_view(), name='auth_logout'),
+    path('login/', views.LoginAPIView.as_view(), name='login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+    path('logout/', views.LogoutAPIView.as_view(), name='logout'),
     path('oauth/google/', views.GoogleAuthRedirectEndpointView.as_view(), name='google_oauth'),
     path('login/google/', views.GoogleAuthGetUrlView.as_view(), name='get_google_auth_redirect_url'),
 ]
