@@ -7,23 +7,19 @@ from navigation.models import UserLocation,Points,Routes
 
 
 class UserPoint(WhoDidIt):
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     point = models.ForeignKey(Points, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return str(self.userprofile)
-
-    # def save(self, *args, **kwargs):
-    #     super().save(self, *args, **kwargs)
-    #     # TODO: add calculation similarity_score and add record to table Similarity
+        return f"user:{str(self.user)},point:{str(self.point)}"
 
 
 class UserRoute(WhoDidIt):
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     route = models.ForeignKey(Routes, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return str(self.userprofile)
+        return f"user:{str(self.user)},route:{str(self.route)}"
 
 
 class Similarity(WhoDidIt):
@@ -32,4 +28,4 @@ class Similarity(WhoDidIt):
     similarity_score = models.DecimalField(max_digits=7, decimal_places=3)
 
     def __str__(self):
-        return str(self.similarity_score)
+        return f"attraction:{str(self.attraction_point)},user:{str(self.user_point)},"

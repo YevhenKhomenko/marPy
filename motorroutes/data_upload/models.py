@@ -1,10 +1,7 @@
 from django.db import models
 from apps_generic.whodidit.models import WhoDidIt
-from django.utils import timezone
 import json
 from navigation.models import UserLocation, Points, Routes
-import datetime
-from accounts.models import UserProfile
 from django.contrib.auth.models import User
 
 
@@ -20,19 +17,19 @@ class RecommendationsData(WhoDidIt):
         with open(self.file.path, "r") as f:
             data = json.load(f)
         for k, v in data.items():
-            if not data[k]['skip_item']:
+            if not v['skip_item']:
                 created_point = Points.objects.get_or_create(
-                    title=data[k]['titletext'],
-                    description=data[k]['description'],
-                    rating=data[k]['rating'],
-                    ratingvoicecount=data[k]['ratingvoicecount'],
-                    phone=data[k]['phone'],
-                    worktime=data[k]['worktime'],
-                    category=data[k]['category'],
-                    foundingdate=data[k]['foundingdate'],
-                    email=data[k]['email'],
-                    website=data[k]['website'],
-                    latlongdms=data[k]['latlongdms'],
-                    latitude=data[k]['Latitude'],
-                    longitude=data[k]['Longitude'],
-                    attractions = True,)
+                    title=v.get('titletext'),
+                    description=v.get('description'),
+                    rating=v.get('rating'),
+                    ratingvoicecount=v.get('ratingvoicecount'),
+                    phone=v.get('phone'),
+                    worktime=v.get('worktime'),
+                    category=v.get('category'),
+                    foundingdate=v.get('foundingdate'),
+                    email=v.get('email'),
+                    website=v.get('website'),
+                    latlongdms=v.get('latlongdms'),
+                    latitude=v.get('Latitude'),
+                    longitude=v.get('Longitude'),
+                    attractions=True, )

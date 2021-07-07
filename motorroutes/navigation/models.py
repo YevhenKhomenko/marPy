@@ -1,14 +1,14 @@
 from django.db import models
-from accounts.models import UserProfile
+from django.contrib.auth.models import User
 
 
 class UserLocation(models.Model):
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
-    user_lat = models.FloatField(('Latitude'), blank=True, null=True)
-    user_lon = models.FloatField(('Longitude'), blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    lat = models.FloatField(('Latitude'), blank=True, null=True)
+    lon = models.FloatField(('Longitude'), blank=True, null=True)
 
     def __str__(self):
-        return str(self.userprofile)
+        return f"user:{str(self.user)},lat:{str(self.lat)},lon{str(self.lon)}"
 
 
 class Points(models.Model):
@@ -29,13 +29,13 @@ class Points(models.Model):
     attractions = models.BooleanField(verbose_name='attractions', default=False)
 
     def __str__(self):
-        return self.title
+        return f"id:{str(self.id)},title:{str(self.title)},attractions:{str(self.attractions)},lat:{str(self.latitude)},lon{str(self.longitude)}"
 
 
 class Routes(models.Model):
     points = models.ManyToManyField(Points)
     distance = models.FloatField(blank=True, null=True)
-    shared_with = models.ManyToManyField(UserProfile)
+    shared_with = models.ManyToManyField(User)
 
     def __str__(self):
-        return self.shared_with
+        return f"id:{str(self.id)},points:{str(self.points)},distance:{str(self.distance)}"

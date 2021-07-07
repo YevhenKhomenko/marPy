@@ -21,8 +21,6 @@ class UserLocationDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_object(self, request):
-        if request.method == 'GET':
-            pass
         return get_object_or_404(UserLocation, pk=self.kwargs.get('userlocation_id'))
 
 
