@@ -1,19 +1,19 @@
 import django_filters
 from django.db.models import Q
 from django_filters.rest_framework import FilterSet
-from .models import Place
+from .models import UserPoint
 
 
-class PlaceFilter(FilterSet):
+class UserPointFilter(FilterSet):
 
     def search_filter(self, qs, name, value):
         return qs.filter(
-            Q(title__icontains=value) | Q(description__icontains=value)
+            Q(point__icontains=value) | Q(userprofile__icontains=value)
         )
 
     search = django_filters.filters.CharFilter(method='search_filter')
 
     #
     class Meta:
-        model = Place
+        model = UserPoint
         fields = ['search', ]

@@ -15,7 +15,7 @@ import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+STATIC_ROOT = os.path.join(BASE_DIR, "frontend/static/")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'statistic.apps.StatisticConfig',
     'payments.apps.PaymentsConfig',
     'gallery.apps.GalleryConfig',
+    'data_upload.apps.DataUploadConfig',
+    'frontend', # enable the frontend app
 
 
 ]
