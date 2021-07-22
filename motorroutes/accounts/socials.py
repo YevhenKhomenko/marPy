@@ -1,6 +1,9 @@
+from rest_framework.exceptions import AuthenticationFailed
+
 import google_auth_oauthlib.flow
 import base64
 import json
+
 
 
 class Google:
@@ -17,7 +20,7 @@ class Google:
     CLIENT_SECRET_JSON_PATH = 'accounts/google_client_secret_public.json'
 
     @staticmethod
-    def validate(code):
+    def fetch_google_user_info(code):
         """
         Query to google oauth2 api to fetch the user info
         """
@@ -38,10 +41,13 @@ class Google:
             id_credentials = Google.decode_id_token(user_credentials.get('id_token', None))
             id_credentials['access'] = user_credentials['token']
             id_credentials['refresh'] = user_credentials['refresh_token']
-            return id_credentials
 
         except Exception as e:
-            return "The token is either invalid or has expired socials"
+            raise AuthenticationFailed('The token is either invalid or has expired')
+
+        Google.validate_google_user_info(id_credentials)
+
+        return id_credentials
 
     @staticmethod
     def get_authorization_url():
@@ -87,6 +93,16 @@ class Google:
         decoded = base64.b64decode(padded)
 
         return json.loads(decoded)
+
+    @staticmethod
+    def validate_google_user_info(user_credentials):
+        iss = user_credentials.get('iss', None)  # must be 'https://accounts.google.com'
+        aud = user_credentials.get('aud', None)
+        sub = user_credentials.get('sub', None)  # unique google user id
+        email = user_credentials.get('email', None)
+
+        if sub is None or aud is None or email is None or iss != 'https://accounts.google.com':
+            raise AuthenticationFailed('Authentication failed. Try again.')
 
 
 

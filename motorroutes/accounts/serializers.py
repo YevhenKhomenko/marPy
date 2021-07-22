@@ -9,8 +9,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import UserProfile, UserAuthCredentials
-from .socials import Google
-from .social_auth import authenticate_social_user
 
 
 class ValidationMixIn:
@@ -200,28 +198,5 @@ class LogoutSerializer(serializers.Serializer):
         except TokenError:
             self.fail('bad_token')
 
-
-class GoogleSocialAuthSerializer(serializers.Serializer):
-    abs_auth_uri = serializers.CharField()
-
-    def validate(self, attrs):
-        user_data = Google.validate(attrs['abs_auth_uri'])
-        try:
-            user_data['sub']
-        except Exception as e:
-            raise serializers.ValidationError(
-                'The token is invalid or expired. Please login again'
-            )
-
-        if user_data['aud'] != settings.GOOGLE_CLIENT_ID:
-            raise AuthenticationFailed('auth failed')
-
-        user_id = user_data['sub']
-        email = user_data['email']
-        name = user_data['name']
-        provider = 'google'
-
-        return authenticate_social_user(
-            provider=provider, user_id=user_id, email=email, name=name)
 
 

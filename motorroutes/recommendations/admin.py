@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import Similarity, Place, OnlineLink
+from .models import Similarity, UserPoint, UserRoute
 
-admin.site.register(Place)
+admin.site.register(UserPoint)
 
 admin.site.register(Similarity)
 
-admin.site.register(OnlineLink)
+admin.site.register(UserRoute)

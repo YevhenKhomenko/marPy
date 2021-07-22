@@ -2,39 +2,30 @@ from django.db import models
 from django.contrib.auth.models import User
 from apps_generic.whodidit.models import WhoDidIt
 from accounts.models import UserProfile
-from navigation.models import Location
+from navigation.models import UserLocation,Points,Routes
 
 
-# Create your models here.
-class Place(WhoDidIt):
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE,null=True, blank=True)
-    title = models.CharField(max_length=200)
-    description = models.CharField(max_length=500)
-    user_ratings = models.FloatField(null=True, blank=True)
-    num_rated = models.IntegerField(null=True, blank=True)
-    comparable = models.BooleanField(default=True)
-    liked = models.BooleanField(null=True, blank=True)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE,null=True, blank=True)
+
+class UserPoint(WhoDidIt):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    point = models.ForeignKey(Points, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return str(self.title)
+        return f"user:{str(self.user)},point:{str(self.point)}"
+
+
+class UserRoute(WhoDidIt):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    route = models.ForeignKey(Routes, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"user:{str(self.user)},route:{str(self.route)}"
 
 
 class Similarity(WhoDidIt):
-    first_place = models.OneToOneField(Place, related_name='first_place', on_delete=models.CASCADE)
-    second_place = models.OneToOneField(Place, related_name='second_place', on_delete=models.CASCADE)
+    attraction_point = models.OneToOneField(Points, related_name='attraction_point', on_delete=models.CASCADE,null=True, blank=True)
+    user_point = models.OneToOneField(UserPoint, related_name='user_point', on_delete=models.CASCADE,null=True, blank=True)
     similarity_score = models.DecimalField(max_digits=7, decimal_places=3)
 
     def __str__(self):
-        return str(self.similarity_score)
-
-
-class OnlineLink(WhoDidIt):
-    place = models.ForeignKey(Place, on_delete=models.CASCADE)
-    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    gallery = models.IntegerField(null=True, blank=True)
-    blog = models.IntegerField(null=True, blank=True)
-    google = models.IntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return str(self.user_id)
+        return f"attraction:{str(self.attraction_point)},user:{str(self.user_point)},"
